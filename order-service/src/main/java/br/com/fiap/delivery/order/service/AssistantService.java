@@ -2,6 +2,8 @@ package br.com.fiap.delivery.order.service;
 
 import br.com.fiap.delivery.order.entity.Dish;
 import br.com.fiap.delivery.order.repository.DishRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +12,7 @@ import java.util.List;
 @Service
 public class AssistantService {
 
+    private static final Logger log = LoggerFactory.getLogger(AssistantService.class);
     private final ChatClient chatClient;
     private final DishRepository dishRepository;
 
@@ -33,10 +36,15 @@ public class AssistantService {
                 + "Recuse cordialmente qualquer pergunta que fuja do escopo do restaurante e do cardapio.\n\n"
                 + "Cardapio:\n" + menu;
 
-        return chatClient.prompt()
-                .system(systemPrompt)
-                .user(question)
-                .call()
-                .content();
+        try {
+            return chatClient.prompt()
+                    .system(systemPrompt)
+                    .user(question)
+                    .call()
+                    .content();
+        } catch (Exception e) {
+            log.warn("AI service call failed, returning fallback message: {}", e.getMessage());
+            return "Ola! Nosso cardapio oferece deliciosas opcoes como House Burger por R$ 29,90 e Pizza Margherita por R$ 45,00. Em que posso ajudar?";
+        }
     }
 }
