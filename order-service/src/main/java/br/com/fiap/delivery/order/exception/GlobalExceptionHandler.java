@@ -1,6 +1,8 @@
 package br.com.fiap.delivery.order.exception;
 
 import br.com.fiap.delivery.order.dto.ErrorResponse;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,5 +29,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PaymentProcessingException.class)
     public ResponseEntity<ErrorResponse> handlePaymentProcessingException(PaymentProcessingException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler({CannotAcquireLockException.class, PessimisticLockingFailureException.class})
+    public ResponseEntity<ErrorResponse> handleLockingFailureException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("Dish out of stock"));
     }
 }
