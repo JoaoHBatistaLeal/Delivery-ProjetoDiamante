@@ -7,6 +7,8 @@ import br.com.fiap.delivery.order.entity.Dish;
 import br.com.fiap.delivery.order.exception.NotFoundException;
 import br.com.fiap.delivery.order.exception.ValidationException;
 import br.com.fiap.delivery.order.repository.DishRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = "*")
 public class ReviewController {
 
+    private static final Logger log = LoggerFactory.getLogger(ReviewController.class);
     private final DishRepository dishRepository;
     private final RabbitTemplate rabbitTemplate;
 
@@ -49,6 +52,7 @@ public class ReviewController {
         );
 
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, message);
+        log.info("Published review for dishId: {} with rating: {} to RabbitMQ", message.getDishId(), message.getRating());
 
         return ResponseEntity.accepted().build();
     }

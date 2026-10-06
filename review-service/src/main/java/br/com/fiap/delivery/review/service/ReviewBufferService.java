@@ -4,6 +4,8 @@ import br.com.fiap.delivery.review.config.RabbitConfig;
 import br.com.fiap.delivery.review.dto.ReviewMessage;
 import br.com.fiap.delivery.review.entity.ReviewSummary;
 import br.com.fiap.delivery.review.repository.ReviewSummaryRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class ReviewBufferService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReviewBufferService.class);
     private final ConcurrentHashMap<Long, ReviewAccumulator> buffer = new ConcurrentHashMap<>();
     private final ReviewSummaryRepository reviewSummaryRepository;
 
@@ -36,6 +39,8 @@ public class ReviewBufferService {
             accumulator.addRating(message.getRating());
             return accumulator;
         });
+
+        log.info("Received review from RabbitMQ for dish: {} with rating: {}", message.getDishName(), message.getRating());
     }
 
     @Scheduled(fixedRate = 5000)
@@ -71,5 +76,7 @@ public class ReviewBufferService {
 
             reviewSummaryRepository.save(summary);
         }
+
+        log.info("Flushed {} reviews from buffer to database", snapshot.size());
     }
 }
