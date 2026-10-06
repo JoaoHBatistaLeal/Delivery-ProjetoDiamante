@@ -9,15 +9,15 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 import java.util.Random;
 
 @RestController
-@RequestMapping("/payments")
 @CrossOrigin(origins = "*")
 public class PaymentController implements ApplicationListener<WebServerInitializedEvent> {
 
@@ -30,7 +30,17 @@ public class PaymentController implements ApplicationListener<WebServerInitializ
         this.port = event.getWebServer().getPort();
     }
 
-    @PostMapping
+    @GetMapping({"/", "/payments"})
+    public ResponseEntity<Map<String, Object>> getInfo() {
+        return ResponseEntity.ok(Map.of(
+                "service", "payment-service",
+                "status", "UP",
+                "instance", port,
+                "endpoints", Map.of("processPayment", "POST /payments")
+        ));
+    }
+
+    @PostMapping("/payments")
     public ResponseEntity<PaymentResponse> processPayment(@RequestBody PaymentRequest request) {
         log.info("Payment processed by instance port: {}", port);
         System.out.println("Payment processed by instance: " + port);
